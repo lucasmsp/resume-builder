@@ -50,3 +50,36 @@ class TestGeneratePDF:
             output_path = Path(tmpdir) / "nested" / "dir" / "resume.pdf"
             result = generate_pdf(sample_selected_resume, output_path)
             assert result.exists()
+
+    def test_long_text_wraps_without_overflowing_page(self):
+        """Test that long text entries (e.g. long project names) wrap across lines and stay within margins."""
+        import pdfplumber
+        from resume_builder.models import Project
+
+        long_name = (
+            "ATMOSPHERE (Adaptive, Trustworthy, Manageable, Orchestrated, "
+            "Secure Privacy-assuring, Hybrid Ecosystem for Resilient Cloud Computing)"
+        )
+        resume = SelectedResume(
+            profile=Profile(name="Test User"),
+            summary="",
+            experiences=[],
+            projects=[(Project(name=long_name, start_year="2020", end_year="2022", description=""), [])],
+            skill_categories=[],
+            certifications=[],
+            education=[],
+            section_order=["projects"],
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "test_long_text.pdf"
+            generate_pdf(resume, output_path)
+            with pdfplumber.open(output_path) as pdf:
+                page = pdf.pages[0]
+                text = page.extract_text()
+                # Verify that the long name wrapped into multiple lines
+                assert "ATMOSPHERE" in text
+                assert "Cloud Computing)" in text
+                # Verify all characters stay inside the right margin
+                for char in page.chars:
+                    assert char["x1"] <= page.width - 10
+

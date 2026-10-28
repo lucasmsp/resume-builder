@@ -89,7 +89,7 @@ class ResumePDF(FPDF):
 
         # Name
         self.set_font(FONT_FAMILY, "B", FONT_SIZE_NAME)
-        self.cell(
+        self.multi_cell(
             0, 8, _sanitize_text(profile.name), align="C", new_x="LMARGIN", new_y="NEXT"
         )
         self.ln(2)
@@ -108,7 +108,7 @@ class ResumePDF(FPDF):
         if contact_parts:
             self.set_font(FONT_FAMILY, "", FONT_SIZE_SMALL)
             contact_line = "  |  ".join(contact_parts)
-            self.cell(
+            self.multi_cell(
                 0,
                 LINE_HEIGHT,
                 _sanitize_text(contact_line),
@@ -121,7 +121,14 @@ class ResumePDF(FPDF):
         # Headline
         if profile.headline:
             self.set_font(FONT_FAMILY, "I", FONT_SIZE_SMALL)
-            self.multi_cell(0, LINE_HEIGHT, _sanitize_text(profile.headline), align="C")
+            self.multi_cell(
+                0,
+                LINE_HEIGHT,
+                _sanitize_text(profile.headline),
+                align="C",
+                new_x="LMARGIN",
+                new_y="NEXT",
+            )
             self.ln(1)
 
         self.ln(SECTION_SPACING)
@@ -147,7 +154,13 @@ class ResumePDF(FPDF):
             return
         self._write_section_heading(SECTION_HEADINGS["summary"])
         self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
-        self.multi_cell(0, LINE_HEIGHT, _sanitize_text(resume.summary))
+        self.multi_cell(
+            0,
+            LINE_HEIGHT,
+            _sanitize_text(resume.summary),
+            new_x="LMARGIN",
+            new_y="NEXT",
+        )
         self.ln(SECTION_SPACING)
 
     def _write_bullets(self, bullets: list):
@@ -158,8 +171,15 @@ class ResumePDF(FPDF):
             original_margin = self.l_margin
             self.set_left_margin(original_margin + BULLET_INDENT)
             self.set_x(original_margin + BULLET_INDENT)
-            self.multi_cell(0, LINE_HEIGHT, _sanitize_text(f"- {bullet.text}"))
+            self.multi_cell(
+                0,
+                LINE_HEIGHT,
+                _sanitize_text(f"- {bullet.text}"),
+                new_x="LMARGIN",
+                new_y="NEXT",
+            )
             self.set_left_margin(original_margin)
+            self.set_x(original_margin)
 
     def _write_technologies_line(self, technologies: list[str]):
         """Write the italic 'Technologies used: ...' line, if any are present."""
@@ -168,7 +188,13 @@ class ResumePDF(FPDF):
         self.ln(1)
         self.set_font(FONT_FAMILY, "I", FONT_SIZE_SMALL)
         technologies_line = "Technologies used: " + ", ".join(technologies)
-        self.multi_cell(0, LINE_HEIGHT, _sanitize_text(technologies_line))
+        self.multi_cell(
+            0,
+            LINE_HEIGHT,
+            _sanitize_text(technologies_line),
+            new_x="LMARGIN",
+            new_y="NEXT",
+        )
         self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
 
     def _write_experience(self, resume: SelectedResume):
@@ -180,8 +206,12 @@ class ResumePDF(FPDF):
         for i, (exp, bullets) in enumerate(resume.experiences):
             # Company and role line
             self.set_font(FONT_FAMILY, "B", FONT_SIZE_SUBHEADING)
-            self.cell(
-                0, LINE_HEIGHT, _sanitize_text(exp.role), new_x="LMARGIN", new_y="NEXT"
+            self.multi_cell(
+                0,
+                LINE_HEIGHT,
+                _sanitize_text(exp.role),
+                new_x="LMARGIN",
+                new_y="NEXT",
             )
 
             self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
@@ -189,7 +219,7 @@ class ResumePDF(FPDF):
             if exp.location:
                 company_line += f" | {exp.location}"
             company_line += f" | {exp.start_date} - {exp.end_date}"
-            self.cell(
+            self.multi_cell(
                 0,
                 LINE_HEIGHT,
                 _sanitize_text(company_line),
@@ -201,7 +231,13 @@ class ResumePDF(FPDF):
             # Description
             if exp.description:
                 self.set_font(FONT_FAMILY, "I", FONT_SIZE_BODY)
-                self.multi_cell(0, LINE_HEIGHT, _sanitize_text(exp.description))
+                self.multi_cell(
+                    0,
+                    LINE_HEIGHT,
+                    _sanitize_text(exp.description),
+                    new_x="LMARGIN",
+                    new_y="NEXT",
+                )
                 self.ln(1)
 
             self._write_bullets(bullets)
@@ -221,7 +257,7 @@ class ResumePDF(FPDF):
         for i, (project, bullets) in enumerate(resume.projects):
             # Project name line
             self.set_font(FONT_FAMILY, "B", FONT_SIZE_SUBHEADING)
-            self.cell(
+            self.multi_cell(
                 0,
                 LINE_HEIGHT,
                 _sanitize_text(project.name),
@@ -232,7 +268,7 @@ class ResumePDF(FPDF):
             # Dates line
             self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
             dates_line = f"{project.start_year} - {project.end_year}"
-            self.cell(
+            self.multi_cell(
                 0,
                 LINE_HEIGHT,
                 _sanitize_text(dates_line),
@@ -244,7 +280,13 @@ class ResumePDF(FPDF):
             # Description
             if project.description:
                 self.set_font(FONT_FAMILY, "I", FONT_SIZE_BODY)
-                self.multi_cell(0, LINE_HEIGHT, _sanitize_text(project.description))
+                self.multi_cell(
+                    0,
+                    LINE_HEIGHT,
+                    _sanitize_text(project.description),
+                    new_x="LMARGIN",
+                    new_y="NEXT",
+                )
                 self.ln(1)
 
             self._write_bullets(bullets)
@@ -271,7 +313,13 @@ class ResumePDF(FPDF):
             self.cell(self.get_string_width(cat_label), LINE_HEIGHT, cat_label)
             self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
             remaining = _sanitize_text(", ".join(skill_names))
-            self.multi_cell(0, LINE_HEIGHT, remaining)
+            self.multi_cell(
+                0,
+                LINE_HEIGHT,
+                remaining,
+                new_x="LMARGIN",
+                new_y="NEXT",
+            )
             self.ln(0.5)
 
         self.ln(SECTION_SPACING)
@@ -287,7 +335,7 @@ class ResumePDF(FPDF):
             line = cert.name
             if cert.issuer:
                 line += f" - {cert.issuer}"
-            self.cell(
+            self.multi_cell(
                 0,
                 LINE_HEIGHT,
                 _sanitize_text(f"- {line}"),
@@ -310,7 +358,7 @@ class ResumePDF(FPDF):
             degree_line = edu.degree
             if edu.field:
                 degree_line += f", {edu.field}"
-            self.cell(
+            self.multi_cell(
                 0,
                 LINE_HEIGHT,
                 _sanitize_text(degree_line),
@@ -325,13 +373,17 @@ class ResumePDF(FPDF):
                 inst_line += f" ({edu.start_year} - {edu.end_year})"
             elif edu.end_year:
                 inst_line += f" ({edu.end_year})"
-            self.cell(
-                0, LINE_HEIGHT, _sanitize_text(inst_line), new_x="LMARGIN", new_y="NEXT"
+            self.multi_cell(
+                0,
+                LINE_HEIGHT,
+                _sanitize_text(inst_line),
+                new_x="LMARGIN",
+                new_y="NEXT",
             )
 
             if edu.notes:
                 self.set_font(FONT_FAMILY, "I", FONT_SIZE_SMALL)
-                self.cell(
+                self.multi_cell(
                     0,
                     LINE_HEIGHT,
                     _sanitize_text(edu.notes),
