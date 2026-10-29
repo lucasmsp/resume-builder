@@ -51,7 +51,7 @@ from .ats_rules import (
     SECTION_HEADINGS,
     SECTION_SPACING,
 )
-from .models import Skill
+from .models import Language, Skill
 from .selector import SelectedResume
 
 
@@ -62,6 +62,22 @@ def _format_skill(skill: Skill, show_years: bool = False) -> str:
     unit = "year" if skill.years == 1 else "years"
     years_str = f"{skill.years:g}"
     return f"{skill.name} ({years_str} {unit})"
+
+
+def _format_language(lang: Language) -> str:
+    """Format language item into a clean string, e.g. Portuguese (Native) or Italian (B2, Studied in Rome)."""
+    name = (lang.name or lang.language or "").strip()
+    details = []
+    prof = lang.proficiency or lang.level
+    if prof:
+        details.append(prof.strip())
+    if lang.notes:
+        details.append(lang.notes.strip())
+
+    if details:
+        details_str = ", ".join(details)
+        return f"{name} ({details_str})"
+    return name
 
 
 FONTS_DIR = Path(__file__).parent / "fonts"
@@ -425,6 +441,25 @@ class ResumePDF(FPDF):
 
         self.ln(SECTION_SPACING)
 
+    def _write_languages(self, resume: SelectedResume):
+        """Write languages section."""
+        if not resume.languages:
+            return
+        self._write_section_heading(SECTION_HEADINGS["languages"])
+
+        self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
+        for lang in resume.languages:
+            line = _format_language(lang)
+            self.multi_cell(
+                0,
+                LINE_HEIGHT,
+                _sanitize_text(f"- {line}"),
+                new_x="LMARGIN",
+                new_y="NEXT",
+            )
+
+        self.ln(SECTION_SPACING)
+
 
 def generate_pdf(
     resume: SelectedResume, output_path: Path, show_skill_years: bool = False
@@ -441,8 +476,9 @@ def generate_pdf(
         "education": pdf._write_education,
         "experience": pdf._write_experience,
         "projects": pdf._write_projects,
-        "skills": pdf._write_skills,
         "certifications": pdf._write_certifications,
+        "languages": pdf._write_languages,
+        "skills": pdf._write_skills,
     }
 
     for section in resume.section_order:

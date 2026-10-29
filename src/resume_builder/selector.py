@@ -14,6 +14,7 @@ from .models import (
     Education,
     Experience,
     ExperienceBullet,
+    Language,
     Profile,
     Project,
     ResumeData,
@@ -36,6 +37,7 @@ class SelectedResume:
         section_order: list[str],
         match_score: float | None = None,
         projects: list[tuple[Project, list[Bullet]]] | None = None,
+        languages: list[Language] | None = None,
     ):
         self.profile = profile
         self.summary = summary
@@ -44,6 +46,7 @@ class SelectedResume:
         self.skill_categories = skill_categories
         self.certifications = certifications
         self.education = education
+        self.languages = languages if languages is not None else []
         self.section_order = section_order
         self.match_score = match_score
 
@@ -78,6 +81,7 @@ def select_generic(resume_data: ResumeData) -> SelectedResume:
         skill_categories=skill_categories,
         certifications=resume_data.certifications,
         education=resume_data.education,
+        languages=resume_data.languages,
         section_order=DEFAULT_SECTION_ORDER,
     )
 
@@ -169,7 +173,8 @@ def select_targeted(
         key=lambda s: section_scores.get(s, 0.0),
         reverse=True,
     )
-    section_order = ["summary", "education"] + dynamic_sections + ["skills"]
+    languages_section = ["languages"] if resume_data.languages else []
+    section_order = ["summary", "education"] + dynamic_sections + languages_section + ["skills"]
 
     return SelectedResume(
         profile=resume_data.profile,
@@ -179,6 +184,7 @@ def select_targeted(
         skill_categories=skill_categories,
         certifications=certifications,
         education=resume_data.education,
+        languages=resume_data.languages,
         section_order=section_order,
         match_score=overall_score,
     )

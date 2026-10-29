@@ -8,6 +8,7 @@ SECTION_HEADINGS = {
     "skills": "Technical Skills",
     "certifications": "Certifications",
     "education": "Education",
+    "languages": "Languages",
 }
 
 # Section order for generic resume (no JD)
@@ -17,6 +18,7 @@ DEFAULT_SECTION_ORDER = [
     "experience",
     "projects",
     "certifications",
+    "languages",
     "skills",
 ]
 
@@ -76,6 +78,14 @@ SECTION_HEADER_SYNONYMS: dict[str, list[str]] = {
     ],
     "certifications": ["certifications", "certificates", "licenses"],
     "education": ["education", "academic background"],
+    "languages": [
+        "languages",
+        "language proficiency",
+        "languages spoken",
+        "idiomas",
+        "línguas",
+        "linguas",
+    ],
 }
 
 # A header line is short by nature ("EXPERIENCE", "Technical Skills") — used

@@ -142,5 +142,38 @@ class TestGeneratePDF:
                 assert "Belo Horizonte, Brazil" in text
                 assert "maria@example.com" in text
 
+    def test_renders_languages_section(self):
+        """Test that languages section renders correctly with formatted items."""
+        import pdfplumber
+        from resume_builder.models import Language
+
+        languages = [
+            Language(name="Portuguese", proficiency="Native"),
+            Language(name="English", proficiency="C1"),
+            Language(name="Italian", proficiency="B2", notes="Studied in Rome"),
+        ]
+
+        resume = SelectedResume(
+            profile=Profile(name="Maria Silva"),
+            summary="Engenheira de software.",
+            experiences=[],
+            projects=[],
+            skill_categories=[],
+            certifications=[],
+            education=[],
+            languages=languages,
+            section_order=["summary", "languages"],
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "test_languages.pdf"
+            generate_pdf(resume, output_path)
+            with pdfplumber.open(output_path) as pdf:
+                text = pdf.pages[0].extract_text()
+                assert "LANGUAGES" in text or "Languages" in text
+                assert "Portuguese (Native)" in text
+                assert "English (C1)" in text
+                assert "Italian (B2, Studied in Rome)" in text
+
+
 
 

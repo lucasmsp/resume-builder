@@ -72,6 +72,16 @@ class Education(BaseModel):
     notes: str | None = None
 
 
+class Language(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    name: str | None = None
+    language: str | None = None
+    proficiency: str | None = None
+    level: str | None = None
+    notes: str | None = None
+
+
 class ResumeData(BaseModel):
     """Complete resume data loaded from YAML files."""
 
@@ -81,3 +91,4 @@ class ResumeData(BaseModel):
     skill_categories: list[SkillCategory] = []
     certifications: list[Certification] = []
     education: list[Education] = []
+    languages: list[Language] = []
