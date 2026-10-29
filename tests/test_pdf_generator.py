@@ -83,3 +83,35 @@ class TestGeneratePDF:
                 for char in page.chars:
                     assert char["x1"] <= page.width - 10
 
+    def test_preserves_accented_characters(self):
+        """Test that accented words like Educação and Gestão are preserved in PDF output."""
+        import pdfplumber
+        from resume_builder.models import Education
+
+        resume = SelectedResume(
+            profile=Profile(name="José Garcia"),
+            summary="Especialista em Gestão e Educação com experiência comprovada.",
+            experiences=[],
+            projects=[],
+            skill_categories=[],
+            certifications=[],
+            education=[
+                Education(
+                    institution="Universidade de São Paulo",
+                    degree="Pós-Graduação em Educação",
+                    field="Ciência da Computação",
+                )
+            ],
+            section_order=["summary", "education"],
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "test_accents.pdf"
+            generate_pdf(resume, output_path)
+            with pdfplumber.open(output_path) as pdf:
+                text = pdf.pages[0].extract_text()
+                assert "Educação" in text
+                assert "Gestão" in text
+                assert "São Paulo" in text
+                assert "Ciência" in text
+
+

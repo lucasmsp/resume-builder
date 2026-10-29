@@ -1,10 +1,14 @@
 """ATS-friendly PDF generation using fpdf2."""
 
+import logging
 from pathlib import Path
 
 from fpdf import FPDF
 
-# Unicode → ASCII replacements for PDF compatibility with core fonts
+# Suppress fontTools warnings about dropping non-standard font tables (e.g. TeX metadata) during subsetting
+logging.getLogger("fontTools").setLevel(logging.ERROR)
+
+# Unicode punctuation replacements for PDF compatibility
 _UNICODE_REPLACEMENTS = {
     "\u2014": " - ",  # em dash
     "\u2013": "-",  # en dash
@@ -21,26 +25,13 @@ _UNICODE_REPLACEMENTS = {
     "\u00b7": "-",  # middle dot
     "\u2023": ">",  # triangular bullet
     "\u2043": "-",  # hyphen bullet
-    "\u00e9": "e",  # é
-    "\u00e7": "c",  # ç
-    "\u00e3": "a",  # ã
-    "\u00f3": "o",  # ó
-    "\u00ed": "i",  # í
-    "\u00e1": "a",  # á
-    "\u00ea": "e",  # ê
-    "\u00f4": "o",  # ô
-    "\u00e0": "a",  # à
-    "\u00fc": "u",  # ü
-    "\u007e": "~",  # tilde
 }
 
 
 def _sanitize_text(text: str) -> str:
-    """Replace Unicode characters with ASCII equivalents for PDF core fonts."""
+    """Normalize typography punctuation and whitespace for PDF rendering."""
     for char, replacement in _UNICODE_REPLACEMENTS.items():
         text = text.replace(char, replacement)
-    # Remove any remaining non-latin-1 characters
-    text = text.encode("latin-1", errors="replace").decode("latin-1")
     return text
 
 
@@ -73,12 +64,48 @@ def _format_skill(skill: Skill, show_years: bool = False) -> str:
     return f"{skill.name} ({years_str} {unit})"
 
 
+FONTS_DIR = Path(__file__).parent / "fonts"
+
+
+def _register_fonts(pdf: FPDF):
+    """Register custom TTF fonts (such as CMU Serif Roman) in FPDF."""
+    search_dirs = [
+        FONTS_DIR,
+        Path.home() / ".local" / "share" / "fonts",
+        Path("/usr/share/fonts/truetype/cmu"),
+    ]
+
+    def _find(filenames: list[str]) -> Path | None:
+        for d in search_dirs:
+            for name in filenames:
+                p = d / name
+                if p.exists():
+                    return p
+        return None
+
+    regular = _find(["cmu.serif-roman.ttf", "cmunrm.ttf"])
+    bold = _find(["cmunbx.ttf", "cmu.serif-bold.ttf"])
+    italic = _find(["cmunti.ttf", "cmu.serif-italic.ttf"])
+    bold_italic = _find(["cmunbi.ttf", "cmu.serif-bolditalic.ttf"])
+
+    if regular:
+        for family in ("CMU Serif Roman", "CMU Serif"):
+            pdf.add_font(family, "", str(regular))
+            if bold:
+                pdf.add_font(family, "B", str(bold))
+            if italic:
+                pdf.add_font(family, "I", str(italic))
+            if bold_italic:
+                pdf.add_font(family, "BI", str(bold_italic))
+
+
 class ResumePDF(FPDF):
     """Custom FPDF class for ATS-friendly resume generation."""
 
     def __init__(self, show_skill_years: bool = False):
         super().__init__()
         self.show_skill_years = show_skill_years
+        _register_fonts(self)
         self.set_margins(PAGE_MARGIN_LEFT, PAGE_MARGIN_TOP, PAGE_MARGIN_RIGHT)
         self.set_auto_page_break(auto=True, margin=PAGE_MARGIN_BOTTOM)
         self.add_page()
