@@ -84,6 +84,20 @@ def main(ctx, data_dir: Path | None):
     default=False,
     help="Render years of experience next to each skill. Disabled by default (adds lines).",
 )
+@click.option(
+    "--lang",
+    "--language",
+    "-l",
+    type=click.Choice(["en", "pt-br", "pt"], case_sensitive=False),
+    default="en",
+    help="Language for resume generation ('en' or 'pt-br'). Defaults to 'en'.",
+)
+@click.option(
+    "--data-dir",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to YAML data directory. Overrides root --data-dir.",
+)
 @click.pass_context
 def generate(
     ctx,
@@ -96,10 +110,19 @@ def generate(
     email: str | None,
     phone: str | None,
     show_skill_years: bool,
+    lang: str,
+    data_dir: Path | None = None,
 ):
     """Generate an ATS-optimized PDF resume."""
-    data_dir = ctx.obj["data_dir"]
+    data_dir = data_dir or ctx.obj.get("data_dir") or DEFAULT_DATA_DIR
     output_path = output or DEFAULT_OUTPUT_DIR / "resume.pdf"
+    lang_key = (lang or "en").lower().strip()
+    if lang_key == "pt":
+        lang_key = "pt-br"
+
+    # Support language subfolder (e.g. data/pt-br/) if present
+    if not (data_dir / "profile.yaml").exists() and (data_dir / lang_key / "profile.yaml").exists():
+        data_dir = data_dir / lang_key
 
     click.echo(f"Loading career data from {data_dir}...")
     resume_data = load_resume_data(data_dir)
@@ -136,8 +159,8 @@ def generate(
     if filter:
         selected = _apply_content_filters(selected, strict=strict_filter)
 
-    click.echo(f"Generating PDF at {output_path}...")
-    generate_pdf(selected, output_path, show_skill_years=show_skill_years)
+    click.echo(f"Generating PDF ({lang_key}) at {output_path}...")
+    generate_pdf(selected, output_path, show_skill_years=show_skill_years, lang=lang_key)
     click.echo(f"Done! Resume saved to {output_path}")
 
     if jd_text:
@@ -306,6 +329,7 @@ def _apply_content_filters(
         skill_categories=selected.skill_categories,
         certifications=selected.certifications,
         education=selected.education,
+        languages=selected.languages,
         section_order=selected.section_order,
         match_score=selected.match_score,
     )

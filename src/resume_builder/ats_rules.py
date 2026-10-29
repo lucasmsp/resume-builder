@@ -1,15 +1,67 @@
 """ATS formatting rules and constants."""
 
-# Standard section headings that ATS systems recognize
-SECTION_HEADINGS = {
+# Standard section headings by language
+SECTION_HEADINGS_EN = {
     "summary": "Professional Summary",
+    "education": "Education",
     "experience": "Professional Experience",
     "projects": "Projects",
     "skills": "Technical Skills",
     "certifications": "Certifications",
-    "education": "Education",
     "languages": "Languages",
 }
+
+SECTION_HEADINGS_PT = {
+    "summary": "Resumo Profissional",
+    "education": "Formação Acadêmica",
+    "experience": "Experiência Profissional",
+    "projects": "Projetos",
+    "skills": "Habilidades Técnicas",
+    "certifications": "Certificações",
+    "languages": "Idiomas",
+}
+
+SECTION_HEADINGS_BY_LANG = {
+    "en": SECTION_HEADINGS_EN,
+    "pt-br": SECTION_HEADINGS_PT,
+    "pt": SECTION_HEADINGS_PT,
+}
+
+SECTION_HEADINGS = SECTION_HEADINGS_EN
+
+
+def get_section_headings(lang: str = "en") -> dict[str, str]:
+    """Get section headings dictionary for the specified language."""
+    key = (lang or "en").lower().strip()
+    return SECTION_HEADINGS_BY_LANG.get(key, SECTION_HEADINGS_EN)
+
+
+# UI text labels by language
+LABELS_EN = {
+    "year": "year",
+    "years": "years",
+    "technologies_used": "Technologies used: ",
+    "present": "Present",
+}
+
+LABELS_PT = {
+    "year": "ano",
+    "years": "anos",
+    "technologies_used": "Tecnologias utilizadas: ",
+    "present": "Atual",
+}
+
+LABELS_BY_LANG = {
+    "en": LABELS_EN,
+    "pt-br": LABELS_PT,
+    "pt": LABELS_PT,
+}
+
+
+def get_labels(lang: str = "en") -> dict[str, str]:
+    """Get text labels dictionary for the specified language."""
+    key = (lang or "en").lower().strip()
+    return LABELS_BY_LANG.get(key, LABELS_EN)
 
 # Section order for generic resume (no JD)
 DEFAULT_SECTION_ORDER = [
@@ -61,23 +113,65 @@ MAX_PAGES = 2
 # generic — it must also recognize section headers in resumes we didn't
 # generate ourselves, not just our own SECTION_HEADINGS values.
 SECTION_HEADER_SYNONYMS: dict[str, list[str]] = {
-    "summary": ["summary", "professional summary", "profile", "objective"],
+    "summary": [
+        "summary",
+        "professional summary",
+        "profile",
+        "objective",
+        "resumo profissional",
+        "resumo",
+        "perfil profissional",
+        "perfil",
+        "sobre mim",
+    ],
     "experience": [
         "experience",
         "professional experience",
         "work experience",
         "employment history",
         "work history",
+        "experiência profissional",
+        "experiencia profissional",
+        "experiência",
+        "experiencia",
+        "histórico profissional",
     ],
-    "projects": ["projects", "personal projects", "side projects"],
+    "projects": [
+        "projects",
+        "personal projects",
+        "side projects",
+        "projetos",
+        "projetos pessoais",
+    ],
     "skills": [
         "skills",
         "technical skills",
         "core competencies",
         "competencies",
+        "habilidades técnicas",
+        "habilidades tecnicas",
+        "habilidades",
+        "competências",
+        "competencias",
     ],
-    "certifications": ["certifications", "certificates", "licenses"],
-    "education": ["education", "academic background"],
+    "certifications": [
+        "certifications",
+        "certificates",
+        "licenses",
+        "certificações",
+        "certificacoes",
+        "certificados",
+    ],
+    "education": [
+        "education",
+        "academic background",
+        "formação acadêmica",
+        "formacao academica",
+        "formação",
+        "formacao",
+        "educação",
+        "educacao",
+    ],
     "languages": [
         "languages",
         "language proficiency",

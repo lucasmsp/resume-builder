@@ -174,6 +174,37 @@ class TestGeneratePDF:
                 assert "English (C1)" in text
                 assert "Italian (B2, Studied in Rome)" in text
 
+    def test_generate_pdf_pt_br(self, sample_selected_resume):
+        """Test that lang='pt-br' produces Portuguese headings and labels."""
+        import pdfplumber
 
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "test_pt_br.pdf"
+            generate_pdf(sample_selected_resume, output_path, show_skill_years=True, lang="pt-br")
+            with pdfplumber.open(output_path) as pdf:
+                text = "\n".join(p.extract_text() for p in pdf.pages)
+                assert "RESUMO PROFISSIONAL" in text
+                assert "FORMAÇÃO ACADÊMICA" in text
+                assert "EXPERIÊNCIA PROFISSIONAL" in text
+                assert "HABILIDADES TÉCNICAS" in text
+                assert "CERTIFICAÇÕES" in text
+                assert "Tecnologias utilizadas:" in text
+                assert "Atual" in text
+                assert "anos" in text
 
+    def test_cli_lang_flag(self):
+        """Test the --lang CLI option using Click runner."""
+        from click.testing import CliRunner
+        from resume_builder.cli import main
+
+        runner = CliRunner()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_pdf = Path(tmpdir) / "cv_pt.pdf"
+            result = runner.invoke(
+                main,
+                ["generate", "--data-dir", "example", "--output", str(out_pdf), "--lang", "pt-br"],
+            )
+            assert result.exit_code == 0
+            assert out_pdf.exists()
+            assert "Generating PDF (pt-br)" in result.output
 

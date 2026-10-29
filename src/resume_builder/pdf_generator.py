@@ -50,27 +50,31 @@ from .ats_rules import (
     PAGE_MARGIN_TOP,
     SECTION_HEADINGS,
     SECTION_SPACING,
+    get_labels,
+    get_section_headings,
 )
 from .models import Language, Skill
 from .selector import SelectedResume
 
 
-def _format_skill(skill: Skill, show_years: bool = False) -> str:
+def _format_skill(skill: Skill, show_years: bool = False, lang: str = "en") -> str:
     """Render a skill as 'Name (N years)', or just 'Name' when years is unset or hidden."""
     if not show_years or skill.years is None:
         return skill.name
-    unit = "year" if skill.years == 1 else "years"
+    labels = get_labels(lang)
+    unit = labels["year"] if skill.years == 1 else labels["years"]
     years_str = f"{skill.years:g}"
     return f"{skill.name} ({years_str} {unit})"
 
 
 def _format_language(lang: Language) -> str:
-    """Format language item into a clean string, e.g. Portuguese (Native) or Italian (B2, Studied in Rome)."""
+    """Render a language as 'Name (Proficiency, Notes)', 'Name (Proficiency)', or 'Name'."""
     name = (lang.name or lang.language or "").strip()
     details = []
-    prof = lang.proficiency or lang.level
-    if prof:
-        details.append(prof.strip())
+    if lang.proficiency:
+        details.append(lang.proficiency.strip())
+    elif lang.level:
+        details.append(lang.level.strip())
     if lang.notes:
         details.append(lang.notes.strip())
 
@@ -118,9 +122,12 @@ def _register_fonts(pdf: FPDF):
 class ResumePDF(FPDF):
     """Custom FPDF class for ATS-friendly resume generation."""
 
-    def __init__(self, show_skill_years: bool = False):
+    def __init__(self, show_skill_years: bool = False, lang: str = "en"):
         super().__init__()
         self.show_skill_years = show_skill_years
+        self.lang = (lang or "en").lower().strip()
+        self.headings = get_section_headings(self.lang)
+        self.labels = get_labels(self.lang)
         _register_fonts(self)
         self.set_margins(PAGE_MARGIN_LEFT, PAGE_MARGIN_TOP, PAGE_MARGIN_RIGHT)
         self.set_auto_page_break(auto=True, margin=PAGE_MARGIN_BOTTOM)
@@ -197,7 +204,7 @@ class ResumePDF(FPDF):
         """Write professional summary section."""
         if not resume.summary:
             return
-        self._write_section_heading(SECTION_HEADINGS["summary"])
+        self._write_section_heading(self.headings["summary"])
         self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
         self.multi_cell(
             0,
@@ -232,7 +239,7 @@ class ResumePDF(FPDF):
             return
         self.ln(1)
         self.set_font(FONT_FAMILY, "I", FONT_SIZE_SMALL)
-        technologies_line = "Technologies used: " + ", ".join(technologies)
+        technologies_line = self.labels["technologies_used"] + ", ".join(technologies)
         self.multi_cell(
             0,
             LINE_HEIGHT,
@@ -246,7 +253,7 @@ class ResumePDF(FPDF):
         """Write experience section."""
         if not resume.experiences:
             return
-        self._write_section_heading(SECTION_HEADINGS["experience"])
+        self._write_section_heading(self.headings["experience"])
 
         for i, (exp, bullets) in enumerate(resume.experiences):
             # Company and role line
@@ -263,7 +270,10 @@ class ResumePDF(FPDF):
             company_line = exp.company
             if exp.location:
                 company_line += f" | {exp.location}"
-            company_line += f" | {exp.start_date} - {exp.end_date}"
+            end_date = exp.end_date
+            if self.lang in ("pt-br", "pt") and end_date and end_date.strip().lower() == "present":
+                end_date = self.labels["present"]
+            company_line += f" | {exp.start_date} - {end_date}"
             self.multi_cell(
                 0,
                 LINE_HEIGHT,
@@ -297,7 +307,7 @@ class ResumePDF(FPDF):
         """Write projects section."""
         if not resume.projects:
             return
-        self._write_section_heading(SECTION_HEADINGS["projects"])
+        self._write_section_heading(self.headings["projects"])
 
         for i, (project, bullets) in enumerate(resume.projects):
             # Project name line
@@ -312,7 +322,10 @@ class ResumePDF(FPDF):
 
             # Dates line
             self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
-            dates_line = f"{project.start_year} - {project.end_year}"
+            end_year = project.end_year
+            if self.lang in ("pt-br", "pt") and end_year and end_year.strip().lower() == "present":
+                end_year = self.labels["present"]
+            dates_line = f"{project.start_year} - {end_year}"
             self.multi_cell(
                 0,
                 LINE_HEIGHT,
@@ -346,12 +359,13 @@ class ResumePDF(FPDF):
         """Write skills section."""
         if not resume.skill_categories:
             return
-        self._write_section_heading(SECTION_HEADINGS["skills"])
+        self._write_section_heading(self.headings["skills"])
 
         self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
         for cat in resume.skill_categories:
             skill_names = [
-                _format_skill(s, show_years=self.show_skill_years) for s in cat.skills
+                _format_skill(s, show_years=self.show_skill_years, lang=self.lang)
+                for s in cat.skills
             ]
             cat_label = _sanitize_text(f"{cat.category}: ")
             self.set_font(FONT_FAMILY, "B", FONT_SIZE_BODY)
@@ -373,7 +387,7 @@ class ResumePDF(FPDF):
         """Write certifications section."""
         if not resume.certifications:
             return
-        self._write_section_heading(SECTION_HEADINGS["certifications"])
+        self._write_section_heading(self.headings["certifications"])
 
         self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
         for cert in resume.certifications:
@@ -390,11 +404,30 @@ class ResumePDF(FPDF):
 
         self.ln(SECTION_SPACING)
 
+    def _write_languages(self, resume: SelectedResume):
+        """Write languages section."""
+        if not resume.languages:
+            return
+        self._write_section_heading(self.headings["languages"])
+
+        self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
+        for lang in resume.languages:
+            line = _format_language(lang)
+            self.multi_cell(
+                0,
+                LINE_HEIGHT,
+                _sanitize_text(f"- {line}"),
+                new_x="LMARGIN",
+                new_y="NEXT",
+            )
+
+        self.ln(SECTION_SPACING)
+
     def _write_education(self, resume: SelectedResume):
         """Write education section."""
         if not resume.education:
             return
-        self._write_section_heading(SECTION_HEADINGS["education"])
+        self._write_section_heading(self.headings["education"])
 
         self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
         for edu in resume.education:
@@ -441,31 +474,15 @@ class ResumePDF(FPDF):
 
         self.ln(SECTION_SPACING)
 
-    def _write_languages(self, resume: SelectedResume):
-        """Write languages section."""
-        if not resume.languages:
-            return
-        self._write_section_heading(SECTION_HEADINGS["languages"])
-
-        self.set_font(FONT_FAMILY, "", FONT_SIZE_BODY)
-        for lang in resume.languages:
-            line = _format_language(lang)
-            self.multi_cell(
-                0,
-                LINE_HEIGHT,
-                _sanitize_text(f"- {line}"),
-                new_x="LMARGIN",
-                new_y="NEXT",
-            )
-
-        self.ln(SECTION_SPACING)
-
 
 def generate_pdf(
-    resume: SelectedResume, output_path: Path, show_skill_years: bool = False
+    resume: SelectedResume,
+    output_path: Path,
+    show_skill_years: bool = False,
+    lang: str = "en",
 ) -> Path:
     """Generate an ATS-friendly PDF resume."""
-    pdf = ResumePDF(show_skill_years=show_skill_years)
+    pdf = ResumePDF(show_skill_years=show_skill_years, lang=lang)
 
     # Write header (name + contact)
     pdf._write_header(resume)
@@ -478,7 +495,7 @@ def generate_pdf(
         "projects": pdf._write_projects,
         "certifications": pdf._write_certifications,
         "languages": pdf._write_languages,
-        "skills": pdf._write_skills,
+        "skills": pdf._write_skills,        
     }
 
     for section in resume.section_order:
