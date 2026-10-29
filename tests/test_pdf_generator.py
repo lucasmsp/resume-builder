@@ -208,3 +208,51 @@ class TestGeneratePDF:
             assert out_pdf.exists()
             assert "Generating PDF (pt-br)" in result.output
 
+    def test_cli_section_order_flag(self):
+        """Test the --section-order CLI option using Click runner."""
+        from click.testing import CliRunner
+        from resume_builder.cli import main
+        import pdfplumber
+
+        runner = CliRunner()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_pdf = Path(tmpdir) / "cv_custom_order.pdf"
+            result = runner.invoke(
+                main,
+                [
+                    "generate",
+                    "--data-dir",
+                    "example",
+                    "--output",
+                    str(out_pdf),
+                    "--section-order",
+                    "education.yaml, profile.yaml, experiences.yaml",
+                ],
+            )
+            assert result.exit_code == 0
+            assert out_pdf.exists()
+            with pdfplumber.open(out_pdf) as pdf:
+                text = pdf.pages[0].extract_text()
+                # Education must appear before Professional Summary and Experience
+                edu_idx = text.find("EDUCATION")
+                summary_idx = text.find("PROFESSIONAL SUMMARY")
+                exp_idx = text.find("PROFESSIONAL EXPERIENCE")
+                assert edu_idx != -1
+                assert summary_idx != -1
+                assert exp_idx != -1
+                assert edu_idx < summary_idx < exp_idx
+
+    def test_cli_section_order_invalid(self):
+        """Test that invalid section names in --section-order produce an error."""
+        from click.testing import CliRunner
+        from resume_builder.cli import main
+
+        runner = CliRunner()
+        result = runner.invoke(
+            main,
+            ["generate", "--data-dir", "example", "--section-order", "invalid_section,profile"],
+        )
+        assert result.exit_code != 0
+        assert "Unknown section name 'invalid_section'" in result.output
+
+

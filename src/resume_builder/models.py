@@ -12,6 +12,7 @@ class Profile(BaseModel):
     nationality: str | None = None
     headline: str | None = None
     summary: str | None = None
+    section_order: list[str] | str | None = None
 
 
 class ExperienceBullet(BaseModel):

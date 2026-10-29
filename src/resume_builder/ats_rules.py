@@ -63,16 +63,79 @@ def get_labels(lang: str = "en") -> dict[str, str]:
     key = (lang or "en").lower().strip()
     return LABELS_BY_LANG.get(key, LABELS_EN)
 
-# Section order for generic resume (no JD)
+# Section order for generic resume (original upstream project default)
 DEFAULT_SECTION_ORDER = [
     "summary",
-    "education",
     "experience",
     "projects",
     "certifications",
-    "languages",
+    "education",
     "skills",
 ]
+
+# Mapping between YAML file names (or section aliases) and internal section keys
+YAML_SECTION_MAP = {
+    "profile": "summary",
+    "summary": "summary",
+    "experiences": "experience",
+    "experience": "experience",
+    "projects": "projects",
+    "project": "projects",
+    "skills": "skills",
+    "skill": "skills",
+    "certifications": "certifications",
+    "certification": "certifications",
+    "education": "education",
+    "languages": "languages",
+    "language": "languages",
+}
+
+
+def resolve_section_order(
+    order: str | list[str] | None = None,
+    available_languages: bool = False,
+) -> list[str]:
+    """Parse and normalize section order from YAML names or canonical section names.
+
+    If order is None, returns the original default section order of the project.
+    """
+    if order is None:
+        default_order = list(DEFAULT_SECTION_ORDER)
+        if available_languages and "languages" not in default_order:
+            idx = (
+                default_order.index("education") + 1
+                if "education" in default_order
+                else len(default_order)
+            )
+            default_order.insert(idx, "languages")
+        return default_order
+
+    if isinstance(order, str):
+        items = [s.strip() for s in order.split(",") if s.strip()]
+    else:
+        items = [str(s).strip() for s in order if str(s).strip()]
+
+    resolved = []
+    seen = set()
+    for item in items:
+        clean = item.lower()
+        if clean.endswith(".yaml"):
+            clean = clean[:-5]
+        elif clean.endswith(".yml"):
+            clean = clean[:-4]
+
+        canonical = YAML_SECTION_MAP.get(clean)
+        if not canonical:
+            valid = ", ".join(sorted(set(YAML_SECTION_MAP.keys())))
+            raise ValueError(
+                f"Unknown section name '{item}'. Valid names (YAML names) are: {valid}"
+            )
+
+        if canonical not in seen:
+            resolved.append(canonical)
+            seen.add(canonical)
+
+    return resolved
 
 # PDF formatting constants
 FONT_FAMILY = "CMU Serif Roman"

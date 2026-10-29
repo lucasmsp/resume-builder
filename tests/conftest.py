@@ -107,10 +107,10 @@ def sample_selected_resume():
         ],
         section_order=[
             "summary",
-            "education",
             "experience",
             "projects",
             "certifications",
+            "education",
             "skills",
         ],
     )

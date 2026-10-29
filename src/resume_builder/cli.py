@@ -4,6 +4,7 @@ from pathlib import Path
 
 import click
 
+from .ats_rules import resolve_section_order
 from .filters import apply_filters, filter_bullets
 from .parser import load_resume_data
 from .pdf_generator import generate_pdf
@@ -93,6 +94,13 @@ def main(ctx, data_dir: Path | None):
     help="Language for resume generation ('en' or 'pt-br'). Defaults to 'en'.",
 )
 @click.option(
+    "--section-order",
+    "--sections",
+    type=str,
+    default=None,
+    help="Custom section display order using comma-separated YAML names (e.g. 'profile,education,experiences,projects,skills').",
+)
+@click.option(
     "--data-dir",
     type=click.Path(exists=True, path_type=Path),
     default=None,
@@ -111,6 +119,7 @@ def generate(
     phone: str | None,
     show_skill_years: bool,
     lang: str,
+    section_order: str | None = None,
     data_dir: Path | None = None,
 ):
     """Generate an ATS-optimized PDF resume."""
@@ -133,6 +142,17 @@ def generate(
     if phone:
         resume_data.profile.phone = phone
 
+    # Parse custom section order if provided via CLI flag or profile.yaml
+    section_order_arg = section_order or resume_data.profile.section_order
+    parsed_section_order = None
+    if section_order_arg:
+        try:
+            parsed_section_order = resolve_section_order(
+                section_order_arg, available_languages=bool(resume_data.languages)
+            )
+        except ValueError as err:
+            raise click.BadParameter(str(err), param_hint="--section-order")
+
     # Determine if we're doing targeted or generic generation
     jd_text = None
     if job_description:
@@ -149,11 +169,14 @@ def generate(
 
         click.echo("Selecting and ranking content...")
         selected = select_targeted(
-            resume_data, scored_for_selection, rank_experiences=rank_experience
+            resume_data,
+            scored_for_selection,
+            rank_experiences=rank_experience,
+            section_order=parsed_section_order,
         )
     else:
         click.echo("No job description provided — generating generic resume.")
-        selected = select_generic(resume_data)
+        selected = select_generic(resume_data, section_order=parsed_section_order)
 
     # Apply content filters
     if filter:
