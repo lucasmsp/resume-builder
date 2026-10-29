@@ -13,10 +13,10 @@ SECTION_HEADINGS = {
 # Section order for generic resume (no JD)
 DEFAULT_SECTION_ORDER = [
     "summary",
+    "education",
     "experience",
     "projects",
     "certifications",
-    "education",
     "skills",
 ]
 

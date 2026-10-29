@@ -233,7 +233,7 @@ class TestSelectTargeted:
         }
         result = select_targeted(sample_resume_data, scored)
         assert result.section_order[0] == "summary"
-        assert result.section_order[-2] == "education"
+        assert result.section_order[1] == "education"
         assert result.section_order[-1] == "skills"
 
     def test_limits_project_bullets_targeted(self, sample_resume_data):

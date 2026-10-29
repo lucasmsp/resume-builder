@@ -163,13 +163,13 @@ def select_targeted(
         "projects": max((s for _, s, _ in scored_projects), default=0.0),
         "certifications": max((s for _, s in scored_certs), default=0.0),
     }
-    # Summary, education, and skills always in fixed positions (skills last)
+    # Summary, education, and skills always in fixed positions (education after summary, skills last)
     dynamic_sections = sorted(
         ["experience", "projects", "certifications"],
         key=lambda s: section_scores.get(s, 0.0),
         reverse=True,
     )
-    section_order = ["summary"] + dynamic_sections + ["education", "skills"]
+    section_order = ["summary", "education"] + dynamic_sections + ["skills"]
 
     return SelectedResume(
         profile=resume_data.profile,

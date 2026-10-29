@@ -438,11 +438,11 @@ def generate_pdf(
     # Write sections in the determined order
     section_writers = {
         "summary": pdf._write_summary,
+        "education": pdf._write_education,
         "experience": pdf._write_experience,
         "projects": pdf._write_projects,
         "skills": pdf._write_skills,
         "certifications": pdf._write_certifications,
-        "education": pdf._write_education,
     }
 
     for section in resume.section_order:
