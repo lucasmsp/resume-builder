@@ -37,7 +37,6 @@ def _sanitize_text(text: str) -> str:
 
 from .ats_rules import (
     BULLET_INDENT,
-    FONT_FAMILY,
     FONT_SIZE_BODY,
     FONT_SIZE_HEADING,
     FONT_SIZE_NAME,
@@ -48,7 +47,6 @@ from .ats_rules import (
     PAGE_MARGIN_LEFT,
     PAGE_MARGIN_RIGHT,
     PAGE_MARGIN_TOP,
-    SECTION_HEADINGS,
     SECTION_SPACING,
     get_labels,
     get_section_headings,

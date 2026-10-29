@@ -1,7 +1,6 @@
 """Content selection and ranking logic."""
 
 from .ats_rules import (
-    DEFAULT_SECTION_ORDER,
     MAX_BULLETS_PER_EXPERIENCE,
     MAX_BULLETS_PER_EXPERIENCE_TARGETED,
     MAX_BULLETS_PER_PROJECT,

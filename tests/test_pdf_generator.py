@@ -54,6 +54,7 @@ class TestGeneratePDF:
     def test_long_text_wraps_without_overflowing_page(self):
         """Test that long text entries (e.g. long project names) wrap across lines and stay within margins."""
         import pdfplumber
+
         from resume_builder.models import Project
 
         long_name = (
@@ -86,6 +87,7 @@ class TestGeneratePDF:
     def test_preserves_accented_characters(self):
         """Test that accented words like Educação and Gestão are preserved in PDF output."""
         import pdfplumber
+
         from resume_builder.models import Education
 
         resume = SelectedResume(
@@ -145,6 +147,7 @@ class TestGeneratePDF:
     def test_renders_languages_section(self):
         """Test that languages section renders correctly with formatted items."""
         import pdfplumber
+
         from resume_builder.models import Language
 
         languages = [
@@ -195,6 +198,7 @@ class TestGeneratePDF:
     def test_cli_lang_flag(self):
         """Test the --lang CLI option using Click runner."""
         from click.testing import CliRunner
+
         from resume_builder.cli import main
 
         runner = CliRunner()
@@ -210,9 +214,10 @@ class TestGeneratePDF:
 
     def test_cli_section_order_flag(self):
         """Test the --section-order CLI option using Click runner."""
-        from click.testing import CliRunner
-        from resume_builder.cli import main
         import pdfplumber
+        from click.testing import CliRunner
+
+        from resume_builder.cli import main
 
         runner = CliRunner()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -245,6 +250,7 @@ class TestGeneratePDF:
     def test_cli_section_order_invalid(self):
         """Test that invalid section names in --section-order produce an error."""
         from click.testing import CliRunner
+
         from resume_builder.cli import main
 
         runner = CliRunner()
@@ -280,9 +286,10 @@ class TestGeneratePDF:
 
     def test_cli_font_flag(self):
         """Test the --font CLI option using Click runner."""
-        from click.testing import CliRunner
-        from resume_builder.cli import main
         import pdfplumber
+        from click.testing import CliRunner
+
+        from resume_builder.cli import main
 
         runner = CliRunner()
         with tempfile.TemporaryDirectory() as tmpdir:
