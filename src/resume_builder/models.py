@@ -13,6 +13,7 @@ class Profile(BaseModel):
     headline: str | None = None
     summary: str | None = None
     section_order: list[str] | str | None = None
+    font: str | None = None
 
 
 class ExperienceBullet(BaseModel):

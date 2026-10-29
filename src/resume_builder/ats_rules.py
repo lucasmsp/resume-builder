@@ -138,7 +138,25 @@ def resolve_section_order(
     return resolved
 
 # PDF formatting constants
-FONT_FAMILY = "CMU Serif Roman"
+FONT_FAMILY = "Helvetica"
+
+SUPPORTED_FONTS = {
+    "helvetica": "Helvetica",
+    "cmu": "CMU Serif Roman",
+    "cmu-serif": "CMU Serif Roman",
+    "cmu serif": "CMU Serif Roman",
+    "cmu serif roman": "CMU Serif Roman",
+    "times": "Times",
+    "courier": "Courier",
+}
+
+
+def resolve_font_family(font: str | None = None) -> str:
+    """Normalize font name to a supported font family, defaulting to Helvetica."""
+    if not font:
+        return FONT_FAMILY
+    key = font.lower().strip()
+    return SUPPORTED_FONTS.get(key, font.strip())
 FONT_SIZE_NAME = 18
 FONT_SIZE_HEADING = 12
 FONT_SIZE_SUBHEADING = 10

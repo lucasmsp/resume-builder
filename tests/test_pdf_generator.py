@@ -206,7 +206,7 @@ class TestGeneratePDF:
             )
             assert result.exit_code == 0
             assert out_pdf.exists()
-            assert "Generating PDF (pt-br)" in result.output
+            assert "Generating PDF (pt-br" in result.output
 
     def test_cli_section_order_flag(self):
         """Test the --section-order CLI option using Click runner."""
@@ -254,5 +254,49 @@ class TestGeneratePDF:
         )
         assert result.exit_code != 0
         assert "Unknown section name 'invalid_section'" in result.output
+
+    def test_default_font_is_helvetica(self, sample_selected_resume):
+        """Test that default font is Helvetica without font argument."""
+        import pdfplumber
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_pdf = Path(tmpdir) / "test_default_font.pdf"
+            generate_pdf(sample_selected_resume, out_pdf)
+            with pdfplumber.open(out_pdf) as pdf:
+                fonts = {c.get("fontname", "") for c in pdf.pages[0].chars}
+                assert any("Helvetica" in f for f in fonts)
+                assert not any("CMUSerif" in f for f in fonts)
+
+    def test_custom_cmu_serif_font(self, sample_selected_resume):
+        """Test specifying CMU Serif Roman as font."""
+        import pdfplumber
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_pdf = Path(tmpdir) / "test_cmu_font.pdf"
+            generate_pdf(sample_selected_resume, out_pdf, font="cmu-serif")
+            with pdfplumber.open(out_pdf) as pdf:
+                fonts = {c.get("fontname", "") for c in pdf.pages[0].chars}
+                assert any("CMUSerif" in f for f in fonts)
+
+    def test_cli_font_flag(self):
+        """Test the --font CLI option using Click runner."""
+        from click.testing import CliRunner
+        from resume_builder.cli import main
+        import pdfplumber
+
+        runner = CliRunner()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_pdf = Path(tmpdir) / "cv_cmu.pdf"
+            result = runner.invoke(
+                main,
+                ["generate", "--data-dir", "example", "--output", str(out_pdf), "--font", "cmu-serif"],
+            )
+            assert result.exit_code == 0
+            assert out_pdf.exists()
+            assert "font: cmu-serif" in result.output
+            with pdfplumber.open(out_pdf) as pdf:
+                fonts = {c.get("fontname", "") for c in pdf.pages[0].chars}
+                assert any("CMUSerif" in f for f in fonts)
+
 
 

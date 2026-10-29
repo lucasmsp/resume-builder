@@ -101,6 +101,13 @@ def main(ctx, data_dir: Path | None):
     help="Custom section display order using comma-separated YAML names (e.g. 'profile,education,experiences,projects,skills').",
 )
 @click.option(
+    "--font",
+    "--font-family",
+    type=str,
+    default=None,
+    help="Font family for PDF generation ('helvetica', 'cmu-serif', 'times', etc.). Defaults to 'helvetica'.",
+)
+@click.option(
     "--data-dir",
     type=click.Path(exists=True, path_type=Path),
     default=None,
@@ -120,6 +127,7 @@ def generate(
     show_skill_years: bool,
     lang: str,
     section_order: str | None = None,
+    font: str | None = None,
     data_dir: Path | None = None,
 ):
     """Generate an ATS-optimized PDF resume."""
@@ -182,8 +190,15 @@ def generate(
     if filter:
         selected = _apply_content_filters(selected, strict=strict_filter)
 
-    click.echo(f"Generating PDF ({lang_key}) at {output_path}...")
-    generate_pdf(selected, output_path, show_skill_years=show_skill_years, lang=lang_key)
+    font_to_use = font or resume_data.profile.font or "helvetica"
+    click.echo(f"Generating PDF ({lang_key}, font: {font_to_use}) at {output_path}...")
+    generate_pdf(
+        selected,
+        output_path,
+        show_skill_years=show_skill_years,
+        lang=lang_key,
+        font=font_to_use,
+    )
     click.echo(f"Done! Resume saved to {output_path}")
 
     if jd_text:

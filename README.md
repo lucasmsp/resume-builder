@@ -38,6 +38,9 @@ python -m resume_builder generate --email "you@example.com" --phone "+55 99 9999
 # Specify custom section order using YAML names (by default, follows original project order)
 python -m resume_builder generate --section-order "profile,education,experiences,projects,skills"
 
+# Choose font family (defaults to Helvetica; also supports 'cmu-serif', 'times', etc.)
+python -m resume_builder generate --font cmu-serif
+
 # Generate in Brazilian Portuguese or English
 python -m resume_builder generate --lang pt-br
 
@@ -81,6 +84,7 @@ In addition to the `--section-order` CLI flag, you can set a persistent section 
 name: "Alex Supertramp"
 headline: "Senior Backend Engineer"
 nationality: "Brazilian" # Optional
+font: "cmu-serif" # Optional: "helvetica" (default) or "cmu-serif"
 # Custom section order (overridden by --section-order CLI flag if passed)
 section_order:
   - profile
@@ -93,7 +97,7 @@ section_order:
 
 ## ATS Optimization Strategies Applied
 
-- Single-column layout with standard fonts (CMU Serif Roman)
+- Single-column layout with standard fonts (Helvetica by default, with optional CMU Serif Roman via `--font cmu-serif`)
 - Standard section headings (Professional Summary, Professional Experience, Technical Skills, etc.)
 - No graphics, tables, or images
 - Keywords from job description mirrored in content selection
