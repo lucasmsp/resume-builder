@@ -9,6 +9,7 @@ class Profile(BaseModel):
     phone: str | None = None
     linkedin: str | None = None
     location: str | None = None
+    nationality: str | None = None
     headline: str | None = None
     summary: str | None = None
 

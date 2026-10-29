@@ -75,3 +75,23 @@ class TestLoadResumeData:
         resume_data = load_resume_data(data_dir)
         assert len(resume_data.projects) == 1
         assert resume_data.projects[0].name == "Side Project"
+
+
+class TestLoadProfile:
+    def test_loads_nationality_when_present(self, data_dir):
+        from resume_builder.parser import load_profile
+
+        (data_dir / "profile.yaml").write_text(
+            "name: Jane Doe\nnationality: Brazilian\nlocation: São Paulo, Brazil\n"
+        )
+        profile = load_profile(data_dir)
+        assert profile.nationality == "Brazilian"
+        assert profile.location == "São Paulo, Brazil"
+
+    def test_nationality_defaults_to_none(self, data_dir):
+        from resume_builder.parser import load_profile
+
+        (data_dir / "profile.yaml").write_text("name: Jane Doe\n")
+        profile = load_profile(data_dir)
+        assert profile.nationality is None
+

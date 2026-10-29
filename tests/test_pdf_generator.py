@@ -114,4 +114,33 @@ class TestGeneratePDF:
                 assert "São Paulo" in text
                 assert "Ciência" in text
 
+    def test_renders_nationality_in_header(self):
+        """Test that nationality is rendered in the header contact line when present."""
+        import pdfplumber
+
+        resume = SelectedResume(
+            profile=Profile(
+                name="Maria Silva",
+                email="maria@example.com",
+                location="Belo Horizonte, Brazil",
+                nationality="Brazilian",
+            ),
+            summary="Engenheira de software.",
+            experiences=[],
+            projects=[],
+            skill_categories=[],
+            certifications=[],
+            education=[],
+            section_order=["summary"],
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "test_nationality.pdf"
+            generate_pdf(resume, output_path)
+            with pdfplumber.open(output_path) as pdf:
+                text = pdf.pages[0].extract_text()
+                assert "Brazilian" in text
+                assert "Belo Horizonte, Brazil" in text
+                assert "maria@example.com" in text
+
+
 

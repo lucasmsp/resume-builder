@@ -129,6 +129,8 @@ class ResumePDF(FPDF):
             contact_parts.append(profile.phone)
         if profile.location:
             contact_parts.append(profile.location)
+        if profile.nationality:
+            contact_parts.append(profile.nationality)
         if profile.linkedin:
             contact_parts.append(profile.linkedin)
 
